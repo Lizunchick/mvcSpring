@@ -1,4 +1,21 @@
+var getList=[];
+var lastid=0;
+var pointNumber = 0;
+var checkEditor = false;
 ymaps.ready(['ext.paintOnMap']).then(init);
+
+function coordsToDots(coordinates) {
+    var Jsoncoords = [];
+    for (var i = 0; i < coordinates.length; i++) {
+        Jsoncoords[i] = {
+            xcoord: coordinates[i][0],
+            ycoord: coordinates[i][1]
+
+        }
+    }
+    return Jsoncoords;
+}
+
 function init() {
     var myMap = new ymaps.Map("map", {
         center: [51.66, 39.21],
@@ -6,30 +23,78 @@ function init() {
     });
 
     //получение данных
-    $.getJSON(
-        "/getsave",
-        function(data) {
+    $.ajax({
+        type:'GET',
+        dataType:'json',
+        contentType: 'application/json',
+        url:'coords',
+        success:function(data) {
             console.log("Getted data", data);
-            for (var i = 0; i < data.length - 1; i++){
-                var mark = new ymaps.Placemark(
-                    [data[i].xcoord, data[i].ycoord],
-                    {
-                        id: data[i].id
-                    },
-                    {
-                        preset: 'islands#dotIcon',
-                        iconColor: '#0000ff'
+            for (var i = 0; i < data.length ; i++){
+                getList[lastid]=data[i]['id'];
+                lastid++;
+                switch (data[i]['type']['id']) {
+                    case 1:{
+                        pointNumber++;
+                        myGeoObject = new ymaps.GeoObject({
+                            geometry: {
+                                type: "Point",
+                                coordinates: [data[i]['coords'][0]['xcoord'], data[i]['coords'][0]['ycoord']]
+                            },
+                            properties: {
+                                iconContent: pointNumber// Контент метки.
+                            }
+                        }, {
+                            draggable: true// Опции// Метку можно перемещать.
+                        });
+                        myMap.geoObjects.add(myGeoObject);
+                        myGeoObject.properties.set('id', data[i]['id']);
+                        break;
                     }
-                );
-                getlist.push(mark);
-                map.geoObjects.add(mark);
-            }
-            lastid = data[data.length - 1].xcoord;
-            console.log(lastid);
-        }
-    );
+                    case 2:{
+                        var coordinates=[];
+                        for(j=0;j<data[i]['coords'].length-1;j++)
+                        {
+                            var jcoord=[data[i]['coords'][j]['xcoord'],data[i]['coords'][j]['ycoord']]
+                            coordinates[j]=jcoord;}
+                        if (currentIndex == styles.length - 1) {
+                            currentIndex = 0;
+                        } else {
+                            currentIndex += 1;
+                        }
+                        var geoObject=new ymaps.Polyline(coordinates, {}, styles[currentIndex])
+                        myMap.geoObjects.add(geoObject);
+                        geoObject.properties.set('id', data[i]['id']);
+                        break;
+                    }
+                    case 3:{
+                        var coordinates=[];
+                        for(j=0;j<data[i]['coords'].length;j++)
+                        {
+                            var jcoord=[data[i]['coords'][j]['xcoord'],data[i]['coords'][j]['ycoord']]
+                            coordinates[j]=jcoord;}
+                        if (currentIndex == styles.length - 1) {
+                            currentIndex = 0;
+                        } else {
+                            currentIndex += 1;
+                        }
+                        var geoObject=new ymaps.Polygon([coordinates], {}, styles[currentIndex]);
+                        myMap.geoObjects.add(geoObject);
+                        geoObject.properties.set('id', data[i]['id']);
+                        break;
+                    }
 
-    var pointNumber = 0;
+                }
+
+            }
+            console.log(getList);
+
+        }
+
+    });
+
+
+
     var paintProcess;
     // Опции многоугольника или линии.
     var styles = [
@@ -66,15 +131,57 @@ function init() {
 
             // Получаем координаты отрисованного контура.
             var coordinates = paintProcess.finishPaintingAt(e);
+            console.log(coordinates);
             paintProcess = null;
+            var type;
             // В зависимости от состояния кнопки добавляем на карту многоугольник или линию с полученными координатами.
-            var geoObject = button.isSelected() ?
-                new ymaps.Polyline(coordinates, {}, styles[currentIndex]) :
-                new ymaps.Polygon([coordinates], {}, styles[currentIndex]);
+            if(button.isSelected()){
+                var geoObject =new ymaps.Polyline(coordinates, {}, styles[currentIndex]) ;
+                type={
+                    id:2,
+                    name:'POLYLINE'
+                }
+            }
+            else{
+                var geoObject = new ymaps.Polygon([coordinates], {}, styles[currentIndex]);
+                type={
+                    id:3,
+                    name:'POLYLGON'
+                }
+            }
+            var Jsoncoords = coordsToDots(coordinates);
             myMap.geoObjects.add(geoObject);
+            var SendData =
+                {
+                    coords: Jsoncoords,
+                    type: type
+                }
+
+            console.log("ObjectData", SendData);
+            var JsonData =  JSON.stringify(SendData);
+            $.ajax({
+                method:'POST',
+                dataType:'JSON',
+                contentType: 'application/json',
+                url:'save',
+                data: JsonData,
+                success:function(data) {
+                    console.log("success");
+                    console.log("Getted id", data);
+                    geoObject.properties.set('id', data);
+                    getList[lastid]=data;
+                    lastid++;
+
+                },
+                error:function (e) {
+                    console.log(e);
+
+                }
+            })
         }
 
-    });
+    })
+
 
     //shift+click=metka
     myMap.events.add('click', function (event) {
@@ -97,13 +204,52 @@ function init() {
             });
 
 
+
             myMap.geoObjects.add(myGeoObject);
+
+            type={
+                id:1,
+                name:'POINT'
+            }
+
+            var Jsoncoords=[];
+
+            Jsoncoords[0]= {
+                xcoord: event.get('coords')[0],
+                ycoord: event.get('coords')[1]
+            }
+
+            var SendData =
+                {
+                    coords: Jsoncoords,
+                    type: type
+                }
+
+            console.log("ObjectData", SendData);
+            var JsonData =  JSON.stringify(SendData);
+            $.ajax({
+                method:'POST',
+                dataType:'json',
+                contentType: 'application/json',
+            url:'save',
+                data:  JsonData,
+                success:function(data) {
+                    console.log("success");
+                    console.log("Getted id ", data);
+                    myGeoObject.properties.set('id', data);
+                    getList[lastid]=data;
+                    lastid++;
+
+                }
+            })
         }
+
+
 
     });
 // add metkq on geooobject(polygone or polyline)
     myMap.geoObjects.events.add('click',function (e) {
-        if(e.get('shiftKey')) {
+        if (e.get('shiftKey')) {
             pointNumber++;
             myGeoObject = new ymaps.GeoObject({
                 // Описание геометрии.
@@ -112,36 +258,166 @@ function init() {
                     coordinates: [e.get('coords')[0], e.get('coords')[1]]
                 },
                 properties: {
-                    // Контент метки.
-                    iconContent: pointNumber
+                    iconContent: pointNumber// Контент метки.
                 }
             }, {
-                // Опции.
-                // Метку можно перемещать.
-                draggable: true
+                draggable: true // Опции// Метку можно перемещать.
             });
 
             myMap.geoObjects.add(myGeoObject);
-        }
-        else {
-            var checkEditor=false;
-            var target=e.get('target');
-            if(e.get('ctrlKey') && !checkEditor){
-                target.editor.startEditing();
-                checkEditor=true;
+            type = {
+                id: 1,
+                name: 'POINT'
             }
-            else {
+
+            var Jsoncoords = [];
+
+            Jsoncoords[0] = {
+                xcoord: e.get('coords')[0],
+                ycoord: e.get('coords')[1]
+            }
+
+            var SendData =
+                {
+                    coords: Jsoncoords,
+                    type: type
+                }
+
+            console.log("ObjectData", SendData);
+            var JsonData = JSON.stringify(SendData);
+            $.ajax({
+                method: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                url: 'save',
+                data: JsonData,
+                success: function (data) {
+                    console.log("success");
+                    console.log("Getted id", data);
+                    myGeoObject.properties.set('id', data);
+                    getList[lastid] = data;
+                    lastid++;
+
+                }
+            })
+        } else {
+            var target = e.get('target');
+            if (e.get('ctrlKey') && !checkEditor) {
+                target.editor.startEditing();
+                checkEditor = true;
+
+                /* target.events.add(['dragstart','dragend'], function (e) {
+                    // var target = e.get('target');
+                     target.options.set("iconColor", '#0000ff');
+                     newCoords = target.geometry._coordinates;
+                     let jsonCoords = coordsToDots([newCoords]);
+                     console.log(newCoords);
+                     console.log(jsonCoords);
+                     let id = target.properties.get('id');
+                     console.log(id)
+                     let data = {
+                         id: id,
+                         coords: jsonCoords
+                     };
+                     $.ajax({
+                         type: 'PUT',
+                         data: JSON.stringify(data),
+                         dataType: 'json',
+                         url: 'update',
+                         contentType: 'application/json',
+                         success: function () {
+                             console.log('update')
+                         }
+
+                     })
+                     target.options.set("iconColor", '#00ffff');
+                 });
+             }*/
+
+            } else {
+                if (!checkEditor) {
+                    return;
+                }
                 target.editor.stopEditing();
-                checkEditor=false;
+                newCoords = target.geometry._coordPath._coordinates[0];
+                let jsonCoords = coordsToDots(newCoords);
+                let id = target.properties.get('id');
+                let data = {
+                    id: id,
+                    coords: jsonCoords
+                };
+
+                $.ajax({
+                    type: 'PUT',
+                    data: JSON.stringify(data),
+                    dataType: 'json',
+                    url: 'update',
+                    contentType: 'application/json',
+                    success: function () {
+                        console.log('update')
+                    }
+
+                })
+                checkEditor = false;
+
+
             }
 
         }
+
+
 
     });
+
+    myMap.geoObjects.events.add(['dragstart','dragend'], function (e) {
+        var target = e.get('target');
+        target.options.set("iconColor", '#0000ff');
+        newCoords = target.geometry._coordinates;
+        let jsonCoords = coordsToDots([newCoords]);
+        console.log(newCoords);
+        console.log(jsonCoords);
+        let id = target.properties.get('id');
+        console.log(id)
+        let data = {
+            id: id,
+            coords: jsonCoords
+        };
+        $.ajax({
+            type: 'PUT',
+            data: JSON.stringify(data),
+            dataType: 'json',
+            url: 'update',
+            contentType: 'application/json',
+            success: function () {
+                console.log('update')
+            }
+
+        })
+        target.options.set("iconColor", '#00ffff');
+    });
+
     myMap.geoObjects.events.add('contextmenu', function (e) {
         e.preventDefault();
         var target = e.get('target');
-        myMap.geoObjects.remove(target);
+        var deleteId=target.properties.get('id');
+        console.log('delete '+deleteId);
+
+        $.ajax({
+            type:'POST',
+            url:'delete/id/'+deleteId,
+            contentType:'application/json',
+            success:function() {
+                console.log("success deleted");
+                myMap.geoObjects.remove(target);
+
+            },
+            error:function (e) {
+                console.log(e);
+
+            }
+
+        })
+
 
     });
 
