@@ -8,6 +8,8 @@ import lizun.model.Figure;
 import lizun.model.Type;
 import lizun.repository.DotRepository;
 import lizun.repository.FigureRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,6 +53,9 @@ public class FigureService {
     public void deleteFigure(Integer id)
     {
         repository.deleteById(id);
+        //Лучше использовать логгер slf4j
+        // static Logger logger = LoggerFactory.getLogger(FigureService.class); - один на класс
+        // logger.info("Figure deleted")
         System.out.println("Deleted");
 
     }
@@ -72,6 +77,9 @@ public class FigureService {
     }
     @Transactional
     public boolean updateFigure(FigureUpdateDto figureDto){
+        //Вместо get() использовать .orEseThrow(new КакаяНибудьОшибка)
+        //Либо руками проверять .isPresent()
+        //Т.к. объекта с таким ID может не быть
         Figure figure = repository.findById(figureDto.getId()).get();
         dotRepository.deleteDotByFigureId(figure.getId());
         for (Dot dot : figureDto.getCoords()) {
