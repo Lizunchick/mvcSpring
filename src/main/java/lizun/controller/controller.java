@@ -60,10 +60,13 @@ public class controller {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public void updateFigure(@RequestBody FigureUpdateDto figure) {
+    public String updateFigure(@RequestBody FigureUpdateDto figure) {
 
        boolean result=service.updateFigure(figure);
             System.out.println(result);
+            if(result) return "true";
+            else
+            return "false";
 
     }
 

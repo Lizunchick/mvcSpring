@@ -1,5 +1,4 @@
-var getList=[];
-var lastid=0;
+
 var pointNumber = 0;
 var checkEditor = false;
 ymaps.ready(['ext.paintOnMap']).then(init);
@@ -31,8 +30,6 @@ function init() {
         success:function(data) {
             console.log("Getted data", data);
             for (var i = 0; i < data.length ; i++){
-                getList[lastid]=data[i]['id'];
-                lastid++;
                 switch (data[i]['type']['id']) {
                     case 1:{
                         pointNumber++;
@@ -87,7 +84,6 @@ function init() {
                 }
 
             }
-            console.log(getList);
 
         }
 
@@ -169,8 +165,6 @@ function init() {
                     console.log("success");
                     console.log("Getted id", data);
                     geoObject.properties.set('id', data);
-                    getList[lastid]=data;
-                    lastid++;
 
                 },
                 error:function (e) {
@@ -237,8 +231,6 @@ function init() {
                     console.log("success");
                     console.log("Getted id ", data);
                     myGeoObject.properties.set('id', data);
-                    getList[lastid]=data;
-                    lastid++;
 
                 }
             })
@@ -295,8 +287,7 @@ function init() {
                     console.log("success");
                     console.log("Getted id", data);
                     myGeoObject.properties.set('id', data);
-                    getList[lastid] = data;
-                    lastid++;
+
 
                 }
             })
@@ -306,33 +297,6 @@ function init() {
                 target.editor.startEditing();
                 checkEditor = true;
 
-                /* target.events.add(['dragstart','dragend'], function (e) {
-                    // var target = e.get('target');
-                     target.options.set("iconColor", '#0000ff');
-                     newCoords = target.geometry._coordinates;
-                     let jsonCoords = coordsToDots([newCoords]);
-                     console.log(newCoords);
-                     console.log(jsonCoords);
-                     let id = target.properties.get('id');
-                     console.log(id)
-                     let data = {
-                         id: id,
-                         coords: jsonCoords
-                     };
-                     $.ajax({
-                         type: 'PUT',
-                         data: JSON.stringify(data),
-                         dataType: 'json',
-                         url: 'update',
-                         contentType: 'application/json',
-                         success: function () {
-                             console.log('update')
-                         }
-
-                     })
-                     target.options.set("iconColor", '#00ffff');
-                 });
-             }*/
 
             } else {
                 if (!checkEditor) {
@@ -374,10 +338,7 @@ function init() {
         target.options.set("iconColor", '#0000ff');
         newCoords = target.geometry._coordinates;
         let jsonCoords = coordsToDots([newCoords]);
-        console.log(newCoords);
-        console.log(jsonCoords);
         let id = target.properties.get('id');
-        console.log(id)
         let data = {
             id: id,
             coords: jsonCoords
@@ -388,12 +349,13 @@ function init() {
             dataType: 'json',
             url: 'update',
             contentType: 'application/json',
-            success: function () {
-                console.log('update')
+            success: function (data) {
+                console.log('update '+data);
+                target.options.set("iconColor", '#00ffff');
+
             }
 
         })
-        target.options.set("iconColor", '#00ffff');
     });
 
     myMap.geoObjects.events.add('contextmenu', function (e) {
