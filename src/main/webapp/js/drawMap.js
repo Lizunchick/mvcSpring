@@ -1,4 +1,5 @@
 
+//var deprecated, надо заменить на let / const
 var pointNumber = 0;
 var checkEditor = false;
 ymaps.ready(['ext.paintOnMap']).then(init);
@@ -31,6 +32,8 @@ function init() {
             console.log("Getted data", data);
             for (var i = 0; i < data.length ; i++){
                 switch (data[i]['type']['id']) {
+                    //Лучше, наверное, сделать абстрактный класс объекта с методом, возвращающим Яндексовский geoObject
+                    //И три его реализации под каждый тип объекта
                     case 1:{
                         pointNumber++;
                         myGeoObject = new ymaps.GeoObject({
@@ -123,6 +126,13 @@ function init() {
 
     // Подпишемся на событие отпускания кнопки мыши.
     myMap.events.add('mouseup', function (e) {
+        /*
+          if (!paintProcess) {
+             return;
+          }
+          Дальше идет тот же код, что был в теле цикла.
+          Уменьшаем вложенность на один Tab
+         */
         if (paintProcess) {
 
             // Получаем координаты отрисованного контура.
@@ -152,7 +162,9 @@ function init() {
                     coords: Jsoncoords,
                     type: type
                 }
-
+                //Обычно все ajax методы выносятся в Сервисы
+            //наподобие бекенд сервисов
+            //Например figureService.saveFigure(figure)
             console.log("ObjectData", SendData);
             var JsonData =  JSON.stringify(SendData);
             $.ajax({
