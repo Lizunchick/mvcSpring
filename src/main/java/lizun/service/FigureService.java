@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class FigureService {
     private FigureRepository repository;
     private DotRepository dotRepository;
+    static Logger logger = LoggerFactory.getLogger(FigureService.class);
 
     @Autowired
     public FigureService(FigureRepository repository, DotRepository dotRepository) {
@@ -33,6 +34,7 @@ public class FigureService {
 
     public List<FigureDto> getAll() {
         List<Figure> figures = repository.findAll();
+
 
         List<FigureDto> dtos = figures.stream().map(
                 (model)->{
@@ -47,16 +49,14 @@ public class FigureService {
                     return figureDto;
                 }
         ).collect(Collectors.toList());
+        logger.info("Points are gotten");
 
         return dtos;
     }
     public void deleteFigure(Integer id)
     {
         repository.deleteById(id);
-        //Лучше использовать логгер slf4j
-        // static Logger logger = LoggerFactory.getLogger(FigureService.class); - один на класс
-        // logger.info("Figure deleted")
-        System.out.println("Deleted");
+        logger.info("Figure deleted");
 
     }
 
@@ -70,23 +70,25 @@ public class FigureService {
            dot.setFigure(figure);
 
         }
-        Figure id=repository.save(figure);
-        System.out.println("Saved "+id.getId());
-        return id.getId();
+        Integer id=repository.save(figure).getId();
+        logger.info("Figure was saved, adding id "+id);
+        return id;
 
     }
     @Transactional
     public boolean updateFigure(FigureUpdateDto figureDto){
-        //Вместо get() использовать .orEseThrow(new КакаяНибудьОшибка)
-        //Либо руками проверять .isPresent()
-        //Т.к. объекта с таким ID может не быть
-        Figure figure = repository.findById(figureDto.getId()).get();
-        dotRepository.deleteDotByFigureId(figure.getId());
-        for (Dot dot : figureDto.getCoords()) {
-            dot.setFigure(figure);
-        }
-        figure.setDots(figureDto.getCoords());
-        return repository.saveAndFlush(figure) != null;
+
+            Figure figure = repository.findById(figureDto.getId()).orElseThrow(()->new NullPointerException());
+
+            dotRepository.deleteDotByFigureId(figure.getId());
+            for (Dot dot : figureDto.getCoords()) {
+                dot.setFigure(figure);
+            }
+            figure.setDots(figureDto.getCoords());
+            logger.info("Figure was updated");
+            return repository.saveAndFlush(figure) != null;
+
+
     }
 
 }

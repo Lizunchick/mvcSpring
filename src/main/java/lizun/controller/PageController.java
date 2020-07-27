@@ -4,7 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-public class controller {
+public class PageController {
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String index() {
