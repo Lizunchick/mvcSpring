@@ -20,7 +20,5 @@ public class FigureUpdateDto {
         return coords;
     }
 
-    public void setCoords(List<Dot> coords) {
-        this.coords = coords;
-    }
+
 }

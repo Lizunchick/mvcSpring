@@ -14,5 +14,4 @@ public interface FigureRepository extends CrudRepository<Figure, Integer> {
     Figure saveAndFlush(Figure figure);
 
 
-     //Figure findLastById();
 }

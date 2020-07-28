@@ -1,23 +1,18 @@
 package lizun.service;
 
-import com.sun.xml.bind.v2.model.core.ID;
+
 import lizun.dto.FigureDto;
 import lizun.dto.FigureUpdateDto;
 import lizun.model.Dot;
 import lizun.model.Figure;
-import lizun.model.Type;
 import lizun.repository.DotRepository;
 import lizun.repository.FigureRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.persistence.Id;
 import javax.transaction.Transactional;
-import javax.validation.constraints.Null;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

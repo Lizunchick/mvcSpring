@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,14 +40,11 @@ public class FigureController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public  Integer addNewFigure(@RequestBody FigureDto figure) {
+        System.out.println(figure);
         return service.addNewFigure(figure);
 
     }
 
-    /*
-        Если используем @RestController, то @ResponseBody можно будет не ставить
-        https://www.baeldung.com/spring-controller-vs-restcontroller
-     */
     @RequestMapping(value = "/update", method = RequestMethod.PUT,
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
