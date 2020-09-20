@@ -19,9 +19,6 @@ public class Dot {
     @JoinColumn(name = "idfigure")
     private Figure figure;
 
-    public Figure getFigure() {
-        return figure;
-    }
 
     public void setFigure(Figure figure) {
         this.figure = figure;
@@ -35,20 +32,6 @@ public class Dot {
         this.id = id;
     }
 
-    public Float getXcoord() {
-        return Xcoord;
-    }
 
-    public void setXcoord(Float xcoord) {
-        Xcoord = xcoord;
-    }
-
-    public Float getYcoord() {
-        return Ycoord;
-    }
-
-    public void setYcoord(Float ycoord) {
-        Ycoord = ycoord;
-    }
 
 }
